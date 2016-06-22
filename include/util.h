@@ -9,9 +9,6 @@
 #define __xalloc(op, size, ...)						\
 	({								\
 		void *___p = op(__VA_ARGS__);				\
-		if (!___p)						\
-			pr_err("%s: Can't allocate %li bytes\n",	\
-			       __func__, (long)(size));			\
 		___p;							\
 	})
 

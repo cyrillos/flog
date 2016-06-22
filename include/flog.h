@@ -4,58 +4,40 @@
 #include <string.h>
 #include <errno.h>
 
-#define LOG_UNSET	(-1)
-#define LOG_MSG		(0) /* Print message regardless of log level */
-#define LOG_ERROR	(1) /* Errors only, when we're in trouble */
-#define LOG_WARN	(2) /* Warnings, dazen and confused but trying to continue */
-#define LOG_INFO	(3) /* Informative, everything is fine */
-#define LOG_DEBUG	(4) /* Debug only */
+/*
+ * By Laurent Deniau at https://groups.google.com/forum/#!topic/comp.std.c/d-6Mj5Lko_s
+ */
+#define FLOG_PP_NARG(...)	FLOG_PP_NARG_(__VA_ARGS__,FLOG_PP_RSEQ_N())
+#define FLOG_PP_NARG_(...)	FLOG_PP_ARG_N(__VA_ARGS__)
 
-extern void print_on_level(unsigned int loglevel, const char *format, ...)
-	__attribute__ ((__format__ (__printf__, 2, 3)));
+#define FLOG_PP_ARG_N(						\
+          _1, _2, _3, _4, _5, _6, _7, _8, _9,_10,		\
+         _11,_12,_13,_14,_15,_16,_17,_18,_19,_20,		\
+         _21,_22,_23,_24,_25,_26,_27,_28,_29,_30,		\
+         _31,_32,_33,_34,_35,_36,_37,_38,_39,_40,		\
+         _41,_42,_43,_44,_45,_46,_47,_48,_49,_50,		\
+         _51,_52,_53,_54,_55,_56,_57,_58,_59,_60,		\
+         _61,_62,_63,N,...) N
 
-#ifndef LOG_PREFIX
-# define LOG_PREFIX
-#endif
+#define FLOG_PP_RSEQ_N()					\
+         63,62,61,60,						\
+         59,58,57,56,55,54,53,52,51,50,				\
+         49,48,47,46,45,44,43,42,41,40,				\
+         39,38,37,36,35,34,33,32,31,30,				\
+         29,28,27,26,25,24,23,22,21,20,				\
+         19,18,17,16,15,14,13,12,11,10,				\
+         9,8,7,6,5,4,3,2,1,0
 
-#define print_once(loglevel, fmt, ...)					\
-	do {								\
-		static bool __printed;					\
-		if (!__printed) {					\
-			print_on_level(loglevel, fmt, ##__VA_ARGS__);	\
-			__printed = 1;					\
-		}							\
-	} while (0)
+extern void flog_encode(size_t nargs, const char *format, ...);
 
-#define pr_msg(fmt, ...)						\
-	print_on_level(LOG_MSG,						\
-		       fmt, ##__VA_ARGS__)
+typedef struct {
+	unsigned int	type;
+	size_t		nargs;
+	const char	*fmt;
+	unsigned long	args[0];
+} flog_msg_t;
 
-#define pr_info(fmt, ...)						\
-	print_on_level(LOG_INFO,					\
-		       LOG_PREFIX fmt, ##__VA_ARGS__)
-
-#define pr_err(fmt, ...)						\
-	print_on_level(LOG_ERROR,					\
-		       "Error (%s:%d): " LOG_PREFIX fmt,		\
-		       __FILE__, __LINE__, ##__VA_ARGS__)
-
-#define pr_err_once(fmt, ...)						\
-	print_once(LOG_ERROR, fmt, ##__VA_ARGS__)
-
-#define pr_warn(fmt, ...)						\
-	print_on_level(LOG_WARN,					\
-		       "Warn  (%s:%d): " LOG_PREFIX fmt,		\
-		       __FILE__, __LINE__, ##__VA_ARGS__)
-
-#define pr_warn_once(fmt, ...)						\
-	print_once(LOG_WARN, fmt, ##__VA_ARGS__)
-
-#define pr_debug(fmt, ...)						\
-	print_on_level(LOG_DEBUG,					\
-		       LOG_PREFIX fmt, ##__VA_ARGS__)
-
-#define pr_perror(fmt, ...)						\
-	pr_err(fmt ": %s\n", ##__VA_ARGS__, strerror(errno))
+#define flog_printf(fmt, ...)					\
+	flog_encode(FLOG_PP_NARG(__VA_ARGS__), fmt, ##__VA_ARGS__)
 
 #endif /* __FLOG_H__ */

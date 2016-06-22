@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-	pr_debug("Some message %s\b", "String1");
-	
+	flog_printf("Some message %s %s\b", "String1", "string2");
+
 	return 0;
 }
