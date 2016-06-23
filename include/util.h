@@ -2,6 +2,7 @@
 #define __UTIL_H__
 
 #include <string.h>
+#include <errno.h>
 
 #include "log.h"
 #include "types.h"
@@ -21,7 +22,7 @@
 
 #define xrealloc_safe(pptr, size)					\
 	({								\
-		int __ret = -1;						\
+		int __ret = -ENOMEM;					\
 		void *new = xrealloc(*pptr, size);			\
 		if (new) {						\
 			*pptr = new;					\

@@ -1,5 +1,5 @@
-#ifndef __TYPES_H__
-#define __TYPES_H__
+#ifndef __FLOG_TYPES_H__
+#define __FLOG_TYPES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -13,4 +13,4 @@ typedef int16_t		s16;
 typedef uint8_t		u8;
 typedef int8_t		s8;
 
-#endif /* __TYPES_H__ */
+#endif /* __FLOG_TYPES_H__ */
