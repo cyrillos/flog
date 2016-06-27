@@ -74,29 +74,14 @@
 		 char:			1,	\
 		 signed char:		2,	\
 		 unsigned char:		3,	\
-		 short:			4,	\
-		 short int:		4,	\
-		 signed short:		4,	\
 		 signed short int:	4,	\
-		 unsigned short:	5,	\
 		 unsigned short int:	5,	\
-		 int:			6,	\
-		 signed:		6,	\
 		 signed int:		6,	\
-		 unsigned:		7,	\
 		 unsigned int:		7,	\
-		 long:			8,	\
-		 long int:		8,	\
 		 signed long:		8,	\
-		 signed long int:	8,	\
 		 unsigned long:		9,	\
-		 unsigned long int:	9,	\
-		 long long:		10,	\
-		 long long int:		10,	\
 		 signed long long:	10,	\
-		 signed long long int:	10,	\
 		 unsigned long long:	11,	\
-		 unsigned long long int:11,	\
 		 float:			12,	\
 		 double:		13,	\
 		 long double:		14,	\
