@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include <ffi.h>
+
 #include "flog.h"
 #include "util.h"
 
@@ -21,27 +23,25 @@ int flog_enqueue(flog_msg_t *m)
 	msgq[msgq_last++] = m;
 }
 
-void flog_decode_msg(int fdout, const char *format, ...)
-{
-	va_list argptr;
-
-	va_start(argptr, format);
-	vdprintf(fdout, format, argptr);
-	va_end(argptr);
-}
-
 void flog_decode_all(int fdout)
 {
-	size_t i;
+	ffi_type *args[66] = { [0] = &ffi_type_pointer, [1 ... 64] = &ffi_type_ulong };
+	void *values[66];
+	ffi_cif cif;
+	ffi_arg rc;
+	size_t i, j;
 
-	for (i = 0; i < msgq_last; i++)
-		flog_decode_msg(fdout, msgq[i]->fmt,
-				msgq[i]->args[0],
-				msgq[i]->args[1],
-				msgq[i]->args[2],
-				msgq[i]->args[3],
-				msgq[i]->args[4],
-				msgq[i]->args[5]);
+	for (i = 0; i < msgq_last; i++) {
+		values[0] = (void *)&fdout;
+		values[1] = (void *)&msgq[i]->fmt;
+
+		for (j = 0; j < msgq[i]->nargs; j++)
+			values[j + 2] = (void *)&msgq[j]->args[j];
+
+		if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, msgq[i]->nargs + 2,
+				 &ffi_type_sint, args) == FFI_OK)
+			ffi_call(&cif, FFI_FN(dprintf), &rc, values);
+	}
 }
 
 void flog_encode_msg(size_t nargs, const char *format, ...)
@@ -49,7 +49,7 @@ void flog_encode_msg(size_t nargs, const char *format, ...)
 	va_list argptr;
 	flog_msg_t *m;
 
-	m = xmalloc(sizeof(*m) + sizeof(m->args[1]) * nargs);
+	m = xmalloc(sizeof(*m) + sizeof(m->args[0]) * nargs);
 	if (m) {
 		unsigned long v;
 		size_t i;
@@ -57,6 +57,7 @@ void flog_encode_msg(size_t nargs, const char *format, ...)
 		va_start(argptr, format);
 		m->type = FLOG_MSG_TYPE_REGULAR;
 		m->fmt = format;
+		m->nargs = nargs;
 
 		for (i = 0; i < nargs; i++)
 			m->args[i] = va_arg(argptr, unsigned long);
