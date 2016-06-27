@@ -1,6 +1,7 @@
 #ifndef __UAPI_FLOG_H__
 #define __UAPI_FLOG_H__
 
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 
@@ -87,8 +88,6 @@
 		 long double:		14,	\
 		 default:		15)
 
-
-
 #define FLOG_MSG_TYPE_UNDEF		0
 #define FLOG_MSG_TYPE_REGULAR		1
 
@@ -103,8 +102,9 @@ extern void flog_encode_msg(size_t nargs, const char *format, ...);
 void flog_decode_msg(int fdout, const char *format, ...);
 extern void flog_decode_all(int fdout);
 
-#define flog_encode(fmt, ...)					\
-	flog_encode_msg(FLOG_PP_NARG(__VA_ARGS__),		\
-			fmt, ##__VA_ARGS__)
+#define flog_encode(fmt, ...)							\
+	flog_encode_msg(FLOG_PP_NARG(__VA_ARGS__),				\
+			fmt, FLOG_FOR_EACH(flog_typecode, __VA_ARGS__),	\
+			##__VA_ARGS__)
 
 #endif /* __UAPI_FLOG_H__ */
