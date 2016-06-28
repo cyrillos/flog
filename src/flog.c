@@ -13,14 +13,25 @@ static size_t msgq_last;
 
 int flog_enqueue(flog_msg_t *m)
 {
-	static const size_t delta = 4096;
+	static char buf[16<<20];
+	static long buf_start = 0;
+	static long buf_end = sizeof(buf);
+	size_t size;
+
+	static const size_t delta = 128;
+
+	size = sizeof(*msgq) * delta;
+
 	if (msgq_last <= msgq_size) {
-		if (xrealloc_safe(&msgq, sizeof(*msgq) * (msgq_size + delta)))
-			return -ENOMEM;
-		msgq_size += delta;
+		if (buf_end > (buf_start + size)) {
+			msgq = (void *)&buf[buf_start];
+			msgq_size += delta;
+			buf_start += size;
+		}
 	}
 
-	msgq[msgq_last++] = m;
+	if (buf_end > buf_start)
+		msgq[msgq_last++] = m;
 }
 
 void flog_decode_all(int fdout)
@@ -46,12 +57,22 @@ void flog_decode_all(int fdout)
 
 void flog_encode_msg(size_t nargs, const char *format, ...)
 {
+	static char buf[16<<20];
+	static long buf_start = 0;
+	static long buf_end = sizeof(buf);
+	size_t size;
+
 	va_list argptr;
 	flog_msg_t *m;
 
-	printf("nargs %d\n", nargs);
+	size = sizeof(*m) + sizeof(m->args[0]) * nargs;
 
-	m = malloc(sizeof(*m) + sizeof(m->args[0]) * nargs);
+	if (buf_end > (buf_start + size)) {
+		m = (void *)&buf[buf_start];
+		buf_start += size;
+	} else
+		return;
+
 	if (m) {
 		unsigned long v;
 		size_t i;
