@@ -10,7 +10,7 @@ $(eval $(call gen-built-in,src))
 
 $(PROGRAM): src/built-in.o
 	$(call msg-gen, $@)
-	$(Q) $(CC) -ggdb3 -lffi -o $@ $^
+	$(Q) $(CC) -lffi -o $@ $^
 
 all: src $(PROGRAM)
 	@true
