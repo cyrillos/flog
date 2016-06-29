@@ -22,7 +22,7 @@ int flog_enqueue(flog_msg_t *m)
 
 	size = sizeof(*msgq) * delta;
 
-	if (msgq_last <= msgq_size) {
+	if (msgq_last >= msgq_size) {
 		if (buf_end > (buf_start + size)) {
 			msgq = (void *)&buf[buf_start];
 			msgq_size += delta;
@@ -53,6 +53,23 @@ void flog_decode_all(int fdout)
 				 &ffi_type_sint, args) == FFI_OK)
 			ffi_call(&cif, FFI_FN(dprintf), &rc, values);
 	}
+}
+
+void stack_scan(const char *format, ...)
+{
+	long end = 0;
+	va_list argptr;
+	long v;
+
+	va_start(argptr, format);
+	while (end != 3) {
+		v = va_arg(argptr, long);
+		printf("v = %li\n", v);
+
+		if (v == (long)0xdeadbeef)
+			end = (end << 1) | 1;
+	}
+	va_end(argptr);
 }
 
 void flog_encode_msg(size_t nargs, const char *format, ...)
