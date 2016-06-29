@@ -3,7 +3,7 @@ export __nmk_dir
 
 PROGRAM := flog
 
-OPTS=-g -O2
+OPTS=-ggdb3
 export OPTS
 
 include $(__nmk_dir)include.mk
@@ -13,7 +13,7 @@ $(eval $(call gen-built-in,src))
 
 built-in.o: src/built-in.o
 	$(call msg-gen, $@)
-	$(Q) $(LD) -r -o $@ -T built-in.S $^
+	$(Q) $(LD) -r -o $@ built-in.S $^
 
 $(PROGRAM): built-in.o
 	$(call msg-gen, $@)

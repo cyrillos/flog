@@ -17,13 +17,13 @@ int main(int argc, char *argv[])
 	size_t i;
 
 	if (argc > 1 && argv[1]) {
-		for (i = 0; i < 100000; i++)
+		for (i = 0; i < 1000000; i++)
 			printf("Some message %s %s %c %li %d %lu\n",
 			       str1, str2,
 			       'c', (long)-4, (short)2,
 			       (unsigned long)2);
 	} else {
-		for (i = 0; i < 100; i++)
+		for (i = 0; i < 1; i++)
 			flog_encode("Some message %s %s %s %c %li %d %lu\n",
 				    str1, str2,
 				    'c', (long)-4, (short)2,

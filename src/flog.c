@@ -11,33 +11,10 @@ static flog_msg_t **msgq;
 static size_t msgq_size;
 static size_t msgq_last;
 
-int flog_enqueue(flog_msg_t *m)
-{
-	static char buf[16<<20];
-	static long buf_start = 0;
-	static long buf_end = sizeof(buf);
-	size_t size;
-
-	static const size_t delta = 128;
-
-	size = sizeof(*msgq) * delta;
-
-	if (msgq_last >= msgq_size) {
-		if (buf_end > (buf_start + size)) {
-			msgq = (void *)&buf[buf_start];
-			msgq_size += delta;
-			buf_start += size;
-		}
-	}
-
-	if (buf_end > buf_start)
-		msgq[msgq_last++] = m;
-}
-
 void flog_decode_all(int fdout)
 {
-	ffi_type *args[33] = { [0] = &ffi_type_pointer, [1 ... 32] = &ffi_type_slong };
-	void *values[33];
+	ffi_type *args[35] = { [0] = &ffi_type_pointer, [1 ... 35] = &ffi_type_slong };
+	void *values[35];
 	ffi_cif cif;
 	ffi_arg rc;
 	size_t i, j;
@@ -55,28 +32,55 @@ void flog_decode_all(int fdout)
 	}
 }
 
+static char mqbuf[32 << 20];
+static unsigned long mqbuf_start = 0;
+static unsigned long mqbuf_end = sizeof(mqbuf);
+
+int flog_enqueue(flog_msg_t *m)
+{
+	static const size_t delta = 128;
+	size_t size = sizeof(*msgq) * delta;
+
+	if (msgq_last >= msgq_size) {
+		if (mqbuf_end > (mqbuf_start + size)) {
+			msgq = (void *)&mqbuf[mqbuf_start];
+			msgq_size += delta;
+			mqbuf_start += size;
+		} else {
+			fprintf(stderr, "No memory for mqbuf\n");
+			exit(1);
+		}
+	}
+
+	msgq[msgq_last++] = m;
+	return 0;
+}
+
 extern char *rodata_start;
 extern char *rodata_end;
 
+static char mbuf[64 << 20];
+static unsigned long mbuf_start = 0;
+static unsigned long mbuf_end = sizeof(mbuf);
+
 void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, ...)
 {
-	static char buf[16<<20];
-	static long buf_start = 0;
-	static long buf_end = sizeof(buf);
-	size_t size;
-
 	va_list argptr;
 	flog_msg_t *m;
+	size_t size;
 
 	size = sizeof(*m) + sizeof(m->args[0]) * nargs;
 
-	if (buf_end > (buf_start + size)) {
-		m = (void *)&buf[buf_start];
-		buf_start += size;
-	} else
-		return;
+	if (mbuf_end > (mbuf_start + size)) {
+		m = (void *)&mbuf[mbuf_start];
+		mbuf_start += size;
+	} else {
+		fprintf(stderr, "No memory for mbuf\n");
+		exit(1);
+	}
 
 	if (m) {
+		char *str_start;
 		unsigned long v;
 		size_t i;
 
@@ -84,19 +88,32 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 		m->nargs = nargs;
 		m->mask = mask;
 
+		/*
+		 * At least one string present in args.
+		 */
+		if (mask)
+			str_start = (void *)m->args + sizeof(m->args[0]) * nargs;
+
 		va_start(argptr, format);
 		for (i = 0; i < nargs; i++) {
 			m->args[i] = (long)va_arg(argptr, long);
+			/*
+			 * If we got a string, we should either
+			 * reference it when in rodata, or make
+			 * a copy (FIXME implement rodata refs).
+			 */
 			if (mask & (1u << i)) {
-				if ((char *)m->args[i] < rodata_start ||
-				    (char *)m->args[i] >= rodata_end)
-				/*
-				 * It's is a pointer to one of
-				 * char * form and could be a string,
-				 * so figure out if we need to dup it.
-				 */
-				//m->args[i] = (long)(void *)strdup((void *)m->args[i]);
-				;
+				size_t n = strlen((void *)m->args[i]);
+
+				if (mbuf_end > (mbuf_start + n + 1)) {
+					memcpy(str_start, (void *)m->args[i], n + 1);
+					m->args[i] = (long)(void *)str_start;
+					mbuf_start += n + 1;
+					str_start += n + 1;
+				} else {
+					fprintf(stderr, "No memory for string argument\n");
+					exit(1);
+				}
 			}
 		}
 		va_end(argptr);
