@@ -55,23 +55,6 @@ void flog_decode_all(int fdout)
 	}
 }
 
-void stack_scan(const char *format, ...)
-{
-	long end = 0;
-	va_list argptr;
-	long v;
-
-	va_start(argptr, format);
-	while (end != 3) {
-		v = va_arg(argptr, long);
-		printf("v = %li\n", v);
-
-		if (v == (long)0xdeadbeef)
-			end = (end << 1) | 1;
-	}
-	va_end(argptr);
-}
-
 extern char *rodata_start;
 extern char *rodata_end;
 
@@ -85,8 +68,6 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 	va_list argptr;
 	flog_msg_t *m;
 
-	printf("mask %x\n", mask);
-	
 	size = sizeof(*m) + sizeof(m->args[0]) * nargs;
 
 	if (buf_end > (buf_start + size)) {
@@ -99,7 +80,6 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 		unsigned long v;
 		size_t i;
 
-		m->type = FLOG_MSG_TYPE_REGULAR;
 		m->fmt = format;
 		m->nargs = nargs;
 		m->mask = mask;
@@ -110,8 +90,6 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 			if (mask & (1u << i)) {
 				if ((char *)m->args[i] < rodata_start ||
 				    (char *)m->args[i] >= rodata_end)
-					printf("%d Need to copy %p\n",
-					       i, (char *)m->args[i]);
 				/*
 				 * It's is a pointer to one of
 				 * char * form and could be a string,
