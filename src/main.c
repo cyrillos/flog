@@ -6,35 +6,29 @@
 
 extern void stack_scan(const char *format, ...);
 
+extern char _rodata_start, _rodata_end;
+char *rodata_start = &_rodata_start;
+char *rodata_end = &_rodata_end;
+
 int main(int argc, char *argv[])
 {
+	static const char str1[] = "String1";
+	static const char str2[] = "string2";
 	size_t i;
 
-//	stack_scan("Format\n",
-//		   (char)1, (short)2,
-//		   (char)3, (short)4,
-//		   (char)5, (short)6,
-//		   (char)7, (short)8,
-//		   (char)9, (short)10,
-//		   (long)-1, (long)-2,
-//		   0xdeadbeef, 0xdeadbeef);
-//	exit(0);
-
-//	flog_encode("Some message %s %lu\n",
-//		    "String1", (unsigned long)2);
-//	flog_decode_all(fileno(stdout));
-//	exit(0);
+	printf("str1 %p str2 %p rodata_start %p rodata_end %p\n",
+	       str1, str2, rodata_start, rodata_end);
 
 	if (argc > 1 && argv[1]) {
 		for (i = 0; i < 100000; i++)
 			printf("Some message %s %s %c %li %d %lu\n",
-			       "String1", "string2",
+			       str1, str2,
 			       'c', (long)-4, (short)2,
 			       (unsigned long)2);
 	} else {
-		for (i = 0; i < 100000; i++)
+		for (i = 0; i < 1; i++)
 			flog_encode("Some message %s %s %c %li %d %lu\n",
-				    "String1", "string2",
+				    str1, str2,
 				    'c', (long)-4, (short)2,
 				    (unsigned long)2);
 //		flog_decode_all(fileno(stdout));

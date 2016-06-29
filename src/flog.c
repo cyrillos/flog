@@ -72,6 +72,9 @@ void stack_scan(const char *format, ...)
 	va_end(argptr);
 }
 
+extern char *rodata_start;
+extern char *rodata_end;
+
 void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, ...)
 {
 	static char buf[16<<20];
@@ -82,6 +85,8 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 	va_list argptr;
 	flog_msg_t *m;
 
+	printf("mask %x\n", mask);
+	
 	size = sizeof(*m) + sizeof(m->args[0]) * nargs;
 
 	if (buf_end > (buf_start + size)) {
@@ -100,8 +105,22 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 		m->mask = mask;
 
 		va_start(argptr, format);
-		for (i = 0; i < nargs; i++)
+		for (i = 0; i < nargs; i++) {
 			m->args[i] = (long)va_arg(argptr, long);
+			if (mask & (1u << i)) {
+				if ((char *)m->args[i] < rodata_start ||
+				    (char *)m->args[i] >= rodata_end)
+					printf("%d Need to copy %p\n",
+					       i, (char *)m->args[i]);
+				/*
+				 * It's is a pointer to one of
+				 * char * form and could be a string,
+				 * so figure out if we need to dup it.
+				 */
+				//m->args[i] = (long)(void *)strdup((void *)m->args[i]);
+				;
+			}
+		}
 		va_end(argptr);
 
 		flog_enqueue(m);

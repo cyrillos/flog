@@ -3,14 +3,21 @@ export __nmk_dir
 
 PROGRAM := flog
 
+OPTS=-g -O2
+export OPTS
+
 include $(__nmk_dir)include.mk
 include $(__nmk_dir)macro.mk
 
 $(eval $(call gen-built-in,src))
 
-$(PROGRAM): src/built-in.o
+built-in.o: src/built-in.o
 	$(call msg-gen, $@)
-	$(Q) $(CC) -ggdb3 -lffi -o $@ $^
+	$(Q) $(LD) -r -o $@ -T built-in.S $^
+
+$(PROGRAM): built-in.o
+	$(call msg-gen, $@)
+	$(Q) $(CC) $(OPTS)  -lffi -o $@ $^
 
 all: src $(PROGRAM)
 	@true
@@ -19,6 +26,7 @@ all: src $(PROGRAM)
 clean:
 	$(call msg-gen, $@)
 	$(Q) $(MAKE) $(build)=src clean
+	$(Q) $(RM) built-in.o
 	$(Q) $(RM) $(PROGRAM)
 .PHONY: clean
 

@@ -138,7 +138,7 @@ extern void flog_decode_all(int fdout);
 
 #define flog_encode(fmt, ...)							\
 	flog_encode_msg(FLOG_PP_NARG(__VA_ARGS__),				\
-			~(FLOG_FOR_EACH(flog_typecode, ##__VA_ARGS__)),		\
+			FLOG_FOR_EACH(flog_typecode, ##__VA_ARGS__),		\
 			fmt, ##__VA_ARGS__)
 
 #endif /* __UAPI_FLOG_H__ */
