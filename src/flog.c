@@ -47,7 +47,7 @@ void flog_decode_all(int fdout)
 		values[1] = (void *)&msgq[i]->fmt;
 
 		for (j = 0; j < msgq[i]->nargs; j++)
-			values[j + 2] = (void *)&msgq[i]->args[j].val;
+			values[j + 2] = (void *)&msgq[i]->args[j];
 
 		if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, msgq[i]->nargs + 2,
 				 &ffi_type_sint, args) == FFI_OK)
@@ -72,7 +72,7 @@ void stack_scan(const char *format, ...)
 	va_end(argptr);
 }
 
-void flog_encode_msg(size_t nargs, const char *format, ...)
+void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, ...)
 {
 	static char buf[16<<20];
 	static long buf_start = 0;
@@ -94,43 +94,16 @@ void flog_encode_msg(size_t nargs, const char *format, ...)
 		unsigned long v;
 		size_t i;
 
-		va_start(argptr, format);
 		m->type = FLOG_MSG_TYPE_REGULAR;
 		m->fmt = format;
 		m->nargs = nargs;
-#if 1
+		m->mask = mask;
+
+		va_start(argptr, format);
 		for (i = 0; i < nargs; i++)
-			m->args[i].type = va_arg(argptr, unsigned int);
-		for (i = 0; i < nargs; i++) {
-			switch (m->args[i].type) {
-#if 0
-			case 1 ... 7:
-				m->args[i].val = va_arg(argptr, int);
-				break;
-			case 8 ... 9:
-				m->args[i].val = va_arg(argptr, long);
-				break;
-			case 10 ... 11:
-				m->args[i].val = va_arg(argptr, long long);
-				break;
-			/* char pointers are treated as strings! */
-			case 18 ... 26:
-			case 30 ... 38:
-				m->args[i].val = (long)va_arg(argptr, void *);
-				break;
-#endif
-			case 15 ... 17:
-			case 27 ... 29:
-				//m->args[i].val = (long)(void *)strdup(va_arg(argptr, char *));
-				m->args[i].val = va_arg(argptr, long);
-				break;
-			default:
-				m->args[i].val = va_arg(argptr, long);
-				break;
-			}
-		}
+			m->args[i] = (long)va_arg(argptr, long);
 		va_end(argptr);
-#endif
+
 		flog_enqueue(m);
 	}
 }

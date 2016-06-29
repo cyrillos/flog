@@ -20,6 +20,11 @@ int main(int argc, char *argv[])
 //		   0xdeadbeef, 0xdeadbeef);
 //	exit(0);
 
+//	flog_encode("Some message %s %lu\n",
+//		    "String1", (unsigned long)2);
+//	flog_decode_all(fileno(stdout));
+//	exit(0);
+
 	if (argc > 1 && argv[1]) {
 		for (i = 0; i < 100000; i++)
 			printf("Some message %s %s %c %li %d %lu\n",
@@ -27,12 +32,12 @@ int main(int argc, char *argv[])
 			       'c', (long)-4, (short)2,
 			       (unsigned long)2);
 	} else {
-		for (i = 0; i < 10; i++)
+		for (i = 0; i < 100000; i++)
 			flog_encode("Some message %s %s %c %li %d %lu\n",
 				    "String1", "string2",
 				    'c', (long)-4, (short)2,
 				    (unsigned long)2);
-		flog_decode_all(fileno(stdout));
+//		flog_decode_all(fileno(stdout));
 	}
 	return 0;
 }
