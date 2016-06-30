@@ -9,7 +9,7 @@
 
 static char mqbuf[32 << 20];
 static flog_msg_t **msgq = (flog_msg_t **)(void *)mqbuf;
-static unsigned long mqbuf_end = sizeof(mqbuf) / sizeof(msgq[0]);
+static unsigned long mqbuf_end = sizeof(mqbuf) / sizeof(flog_msg_t *);
 static size_t msgq_last;
 
 void flog_decode_all(int fdout)
@@ -24,8 +24,9 @@ void flog_decode_all(int fdout)
 	ffi_arg rc;
 	size_t i, j;
 
+	values[0] = (void *)&fdout;
+
 	for (i = 0; i < msgq_last; i++) {
-		values[0] = (void *)&fdout;
 		values[1] = (void *)&msgq[i]->fmt;
 
 		for (j = 0; j < msgq[i]->nargs; j++)

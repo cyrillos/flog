@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <getopt.h>
+
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "flog.h"
-
-extern void stack_scan(const char *format, ...);
 
 extern char _rodata_start, _rodata_end;
 char *rodata_start = &_rodata_start;
@@ -14,24 +16,80 @@ int main(int argc, char *argv[])
 {
 	static const char str1[] = "String1";
 	static const char str2[] = "string2";
-	const size_t niter = 100000;
+	int fdout = fileno(stdout);
+	bool use_decoder = false;
+	bool use_binary = true;
+	size_t niter = 100;
+	int opt, idx;
 	size_t i;
 
-	if (argc > 1 && atoi(argv[1]) == 1) {
+#define FMT_ARGS	"Some message %s %s %c %li %d %lu\n",	\
+			str1, str2, 'c', (long)-4, (short)2,	\
+			(unsigned long)2
+
+	static const char short_opts[] = "m:o:di:h";
+	static struct option long_opts[] = {
+		{ "mode",		required_argument,	0, 'm'	},
+		{ "output",		required_argument,	0, 'o'	},
+		{ "decode",		no_argument,		0, 'd'	},
+		{ "iter",		required_argument,	0, 'i'	},
+		{ "help",		no_argument,		0, 'h'	},
+		{ },
+	};
+
+	while (1) {
+		idx = -1;
+		opt = getopt_long(argc, argv, short_opts, long_opts, &idx);
+		if (opt == -1)
+			break;
+
+		switch (opt) {
+		case 'm':
+			if (strcmp(optarg, "binary") == 0) {
+				use_binary = true;
+			} else if (strcmp(optarg, "dprintf") == 0) {
+				use_binary = false;
+			} else
+				goto usage;
+			break;
+		case 'o':
+			if (strcmp(optarg, "stdout") == 0) {
+				fdout = fileno(stdout);
+			} else if (strcmp(optarg, "stderr") == 0) {
+				fdout = fileno(stderr);
+			} else {
+				fdout = open(optarg, O_RDWR, O_TRUNC);
+				if (fdout < 0) {
+					fprintf(stderr, "Can't open %s: %s\n",
+						optarg, strerror(errno));
+					exit(1);
+				}
+			}
+			break;
+		case 'i':
+			niter = atoi(optarg);
+			break;
+		case 'h':
+		default:
+			goto usage;
+		}
+	}
+
+	if (use_binary) {
 		for (i = 0; i < niter; i++)
-			printf("Some message %s %s %c %li %d %lu\n",
-			       str1, str2,
-			       'c', (long)-4, (short)2,
-			       (unsigned long)2);
+			flog_encode(FMT_ARGS);
+		if (use_decoder)
+			flog_decode_all(fdout);
 	} else {
 		for (i = 0; i < niter; i++)
-			flog_encode("Some message %s %s %c %li %d %lu\n",
-				    str1, str2,
-				    'c', (long)-4, (short)2,
-				    (unsigned long)2);
-
-		if (argc > 1 && atoi(argv[1]) == 2)
-			flog_decode_all(fileno(stdout));
+			dprintf(fdout, FMT_ARGS);
 	}
+
 	return 0;
+usage:
+	fprintf(stderr,
+		"flog [--mode binary|dprintf] "
+		"[--output stdout|stderr|filename] "
+		"[--decode] [--iter number]\n");
+	return 1;
 }
