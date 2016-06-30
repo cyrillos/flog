@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 			} else if (strcmp(optarg, "stderr") == 0) {
 				fdout = fileno(stderr);
 			} else {
-				fdout = open(optarg, O_RDWR, O_TRUNC);
+				fdout = open(optarg, O_RDWR | O_CREAT | O_TRUNC, 0644);
 				if (fdout < 0) {
 					fprintf(stderr, "Can't open %s: %s\n",
 						optarg, strerror(errno));
@@ -68,6 +68,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'i':
 			niter = atoi(optarg);
+			break;
+		case 'd':
+			use_decoder = true;
 			break;
 		case 'h':
 		default:
