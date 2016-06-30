@@ -10,7 +10,7 @@
 static char mqbuf[32 << 20];
 static flog_msg_t **msgq = (flog_msg_t **)(void *)mqbuf;
 static unsigned long mqbuf_end = sizeof(mqbuf) / sizeof(flog_msg_t *);
-static size_t msgq_last;
+static unsigned long msgq_last;
 
 void flog_decode_all(int fdout)
 {

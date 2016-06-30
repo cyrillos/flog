@@ -23,10 +23,6 @@ int main(int argc, char *argv[])
 	int opt, idx;
 	size_t i;
 
-#define FMT_ARGS	"Some message %s %s %c %li %d %lu\n",	\
-			str1, str2, 'c', (long)-4, (short)2,	\
-			(unsigned long)2
-
 	static const char short_opts[] = "m:o:di:h";
 	static struct option long_opts[] = {
 		{ "mode",		required_argument,	0, 'm'	},
@@ -80,12 +76,16 @@ int main(int argc, char *argv[])
 
 	if (use_binary) {
 		for (i = 0; i < niter; i++)
-			flog_encode(FMT_ARGS);
+			flog_encode("Some message %s %s %c %li %d %lu\n",
+				    str1, str2, 'c', (long)-4, (short)2,
+				    (unsigned long)2);
 		if (use_decoder)
 			flog_decode_all(fdout);
 	} else {
 		for (i = 0; i < niter; i++)
-			dprintf(fdout, FMT_ARGS);
+			dprintf(fdout, "Some message %s %s %c %li %d %lu\n",
+				str1, str2, 'c', (long)-4, (short)2,
+				(unsigned long)2);
 	}
 
 	return 0;
