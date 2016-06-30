@@ -127,15 +127,17 @@
 		 default:			-1)
 
 typedef struct {
+	unsigned int	magic;
+	unsigned int	size;
 	unsigned int	nargs;
 	unsigned int	mask;
-	const char	*fmt;
+	long		fmt;
 	long		args[0];
 } flog_msg_t;
 
-extern void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, ...);
+extern void flog_encode_msg(int fdout, unsigned int nargs, unsigned int mask, const char *format, ...);
 void flog_decode_msg(int fdout, const char *format, ...);
-extern void flog_decode_all(int fdout);
+extern int flog_decode_all(int fdin, int fdout);
 
 #define flog_encode(fmt, ...)							\
 	flog_encode_msg(FLOG_PP_NARG(__VA_ARGS__),				\
