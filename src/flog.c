@@ -7,8 +7,9 @@
 #include "flog.h"
 #include "util.h"
 
-static flog_msg_t **msgq;
-static size_t msgq_size;
+static char mqbuf[32 << 20];
+static flog_msg_t **msgq = (flog_msg_t **)(void *)mqbuf;
+static unsigned long mqbuf_end = sizeof(mqbuf) / sizeof(msgq[0]);
 static size_t msgq_last;
 
 void flog_decode_all(int fdout)
@@ -36,24 +37,13 @@ void flog_decode_all(int fdout)
 	}
 }
 
-static char mqbuf[32 << 20];
-static unsigned long mqbuf_start = 0;
-static unsigned long mqbuf_end = sizeof(mqbuf);
-
 int flog_enqueue(flog_msg_t *m)
 {
 	static const size_t delta = 128;
-	size_t size = sizeof(*msgq) * delta;
 
-	if (msgq_last >= msgq_size) {
-		if (mqbuf_end > (mqbuf_start + size)) {
-			msgq = (void *)&mqbuf[mqbuf_start];
-			msgq_size += delta;
-			mqbuf_start += size;
-		} else {
-			fprintf(stderr, "No memory for mqbuf\n");
-			exit(1);
-		}
+	if (mqbuf_end <= (msgq_last + 1)) {
+		fprintf(stderr, "No memory for mqbuf\n");
+		exit(1);
 	}
 
 	msgq[msgq_last++] = m;
