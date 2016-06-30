@@ -63,7 +63,7 @@ int flog_enqueue(flog_msg_t *m)
 extern char *rodata_start;
 extern char *rodata_end;
 
-static char mbuf[64 << 20];
+static char mbuf[80 << 20];
 static unsigned long mbuf_start = 0;
 static unsigned long mbuf_end = sizeof(mbuf);
 

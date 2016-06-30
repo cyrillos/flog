@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 	static const char str2[] = "string2";
 	size_t i;
 
-	if (argc > 1 && argv[1]) {
+	if (argc > 1 && atoi(argv[1]) == 1) {
 		for (i = 0; i < 1000000; i++)
 			printf("Some message %s %s %c %li %d %lu\n",
 			       str1, str2,
@@ -28,7 +28,9 @@ int main(int argc, char *argv[])
 				    str1, str2,
 				    'c', (long)-4, (short)2,
 				    (unsigned long)2);
-		flog_decode_all(fileno(stdout));
+
+		if (argc > 1 && atoi(argv[1]) == 2)
+			flog_decode_all(fileno(stdout));
 	}
 	return 0;
 }
