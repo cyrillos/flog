@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e -x
+
+time ./flog run -i 1000000 > /tmp/flog.raw
+time ./flog run -d < /tmp/flog.raw > /tmp/flog.raw.txt
+time ./flog run -m dprintf -i 1000000 > /tmp/flog.dprintf.txt
+cmp /tmp/flog.raw.txt /tmp/flog.dprintf.txt

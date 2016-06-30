@@ -1,0 +1,6 @@
+sudo: required
+services:
+        - docker
+script:
+        - docker build -f scripts/travis/Dockerfile -t flog .
+        - docker run -t flog make test
