@@ -14,16 +14,17 @@ int main(int argc, char *argv[])
 {
 	static const char str1[] = "String1";
 	static const char str2[] = "string2";
+	const size_t niter = 100000;
 	size_t i;
 
 	if (argc > 1 && atoi(argv[1]) == 1) {
-		for (i = 0; i < 1000000; i++)
+		for (i = 0; i < niter; i++)
 			printf("Some message %s %s %c %li %d %lu\n",
 			       str1, str2,
 			       'c', (long)-4, (short)2,
 			       (unsigned long)2);
 	} else {
-		for (i = 0; i < 1000000; i++)
+		for (i = 0; i < niter; i++)
 			flog_encode("Some message %s %s %c %li %d %lu\n",
 				    str1, str2,
 				    'c', (long)-4, (short)2,
