@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <getopt.h>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -75,12 +76,13 @@ int main(int argc, char *argv[])
 	}
 
 	if (use_binary) {
+		if (use_decoder)
+			return flog_decode_all(STDIN_FILENO, fdout);
+
 		for (i = 0; i < niter; i++)
-			flog_encode("Some message %s %s %c %li %d %lu\n",
+			flog_encode(STDOUT_FILENO, "Some message %s %s %c %li %d %lu\n",
 				    str1, str2, 'c', (long)-4, (short)2,
 				    (unsigned long)2);
-		if (use_decoder)
-			flog_decode_all(fdout);
 	} else {
 		for (i = 0; i < niter; i++)
 			dprintf(fdout, "Some message %s %s %c %li %d %lu\n",

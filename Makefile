@@ -3,7 +3,7 @@ export __nmk_dir
 
 PROGRAM := flog
 
-OPTS=-ggdb3
+OPTS=-ggdb3 -Wall -Werror
 export OPTS
 
 include $(__nmk_dir)include.mk
