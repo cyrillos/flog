@@ -87,7 +87,7 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 		 * At least one string present in args.
 		 */
 		if (mask)
-			str_start = (void *)m->args + size;
+			str_start = (void *)m->args + sizeof(m->args[0]) * nargs;
 
 		va_start(argptr, format);
 		for (i = 0; i < nargs; i++) {
