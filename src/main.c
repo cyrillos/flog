@@ -23,8 +23,8 @@ int main(int argc, char *argv[])
 			       'c', (long)-4, (short)2,
 			       (unsigned long)2);
 	} else {
-		for (i = 0; i < 1; i++)
-			flog_encode("Some message %s %s %s %c %li %d %lu\n",
+		for (i = 0; i < 1000000; i++)
+			flog_encode("Some message %s %s %c %li %d %lu\n",
 				    str1, str2,
 				    'c', (long)-4, (short)2,
 				    (unsigned long)2);

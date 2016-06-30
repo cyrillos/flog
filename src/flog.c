@@ -13,8 +13,12 @@ static size_t msgq_last;
 
 void flog_decode_all(int fdout)
 {
-	ffi_type *args[35] = { [0] = &ffi_type_pointer, [1 ... 35] = &ffi_type_slong };
-	void *values[35];
+	ffi_type *args[34] = {
+		[0]		= &ffi_type_sint,
+		[1]		= &ffi_type_pointer,
+		[2 ... 33]	= &ffi_type_slong
+	};
+	void *values[34];
 	ffi_cif cif;
 	ffi_arg rc;
 	size_t i, j;
@@ -92,7 +96,7 @@ void flog_encode_msg(unsigned int nargs, unsigned int mask, const char *format, 
 		 * At least one string present in args.
 		 */
 		if (mask)
-			str_start = (void *)m->args + sizeof(m->args[0]) * nargs;
+			str_start = (void *)m->args + size;
 
 		va_start(argptr, format);
 		for (i = 0; i < nargs; i++) {
