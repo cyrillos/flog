@@ -2,7 +2,12 @@
 
 set -e -x
 
+time ./flog run -i 1000000 -o /tmp/flog.raw.map
 time ./flog run -i 1000000 > /tmp/flog.raw
-time ./flog run -d < /tmp/flog.raw > /tmp/flog.raw.txt
 time ./flog run -m dprintf -i 1000000 > /tmp/flog.dprintf.txt
+
+time ./flog run -d < /tmp/flog.raw > /tmp/flog.raw.txt
 cmp /tmp/flog.raw.txt /tmp/flog.dprintf.txt
+
+time ./flog run -d < /tmp/flog.raw.map > /tmp/flog.raw.map.txt
+cmp /tmp/flog.raw.map.txt /tmp/flog.dprintf.txt

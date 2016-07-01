@@ -15,9 +15,9 @@ char *rodata_end = &_rodata_end;
 
 int main(int argc, char *argv[])
 {
-	static const char str1[] = "String1";
-	static const char str2[] = "string2";
-	int fdout = fileno(stdout);
+	static const char str1[] = "String1 String1";
+	static const char str2[] = "string2 string2 string2";
+	int fdout = STDOUT_FILENO;
 	bool use_decoder = false;
 	bool use_binary = true;
 	size_t niter = 100;
@@ -79,10 +79,15 @@ int main(int argc, char *argv[])
 		if (use_decoder)
 			return flog_decode_all(STDIN_FILENO, fdout);
 
+		if (fdout != STDOUT_FILENO && flog_map_buf(fdout))
+			return 1;
 		for (i = 0; i < niter; i++)
-			flog_encode(STDOUT_FILENO, "Some message %s %s %c %li %d %lu\n",
+			if (flog_encode(fdout, "Some message %s %s %c %li %d %lu\n",
 				    str1, str2, 'c', (long)-4, (short)2,
-				    (unsigned long)2);
+				    (unsigned long)2))
+				return 1;
+		if (flog_close(fdout))
+			return 1;
 	} else {
 		for (i = 0; i < niter; i++)
 			dprintf(fdout, "Some message %s %s %c %li %d %lu\n",
