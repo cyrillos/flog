@@ -135,12 +135,15 @@ typedef struct {
 	long		args[0];
 } flog_msg_t;
 
-extern void flog_encode_msg(int fdout, unsigned int nargs, unsigned int mask, const char *format, ...);
+extern int flog_encode_msg(int fdout, unsigned int nargs, unsigned int mask, const char *format, ...);
 void flog_decode_msg(int fdout, const char *format, ...);
 extern int flog_decode_all(int fdin, int fdout);
 
-#define flog_encode(fmt, ...)							\
-	flog_encode_msg(FLOG_PP_NARG(__VA_ARGS__),				\
+#define flog_encode(fdout, fmt, ...)							\
+	flog_encode_msg(fdout, FLOG_PP_NARG(__VA_ARGS__),				\
 			FLOG_GENMASK(flog_genbit, ##__VA_ARGS__), fmt, ##__VA_ARGS__)
+
+int flog_map_buf(int fdout);
+int flog_close(int fdout);
 
 #endif /* __UAPI_FLOG_H__ */

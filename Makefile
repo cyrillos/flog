@@ -30,4 +30,7 @@ clean:
 	$(Q) $(RM) $(PROGRAM)
 .PHONY: clean
 
+test:
+	./tests/test00
+
 .DEFAULT_GOAL := all

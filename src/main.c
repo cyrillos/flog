@@ -15,9 +15,9 @@ char *rodata_end = &_rodata_end;
 
 int main(int argc, char *argv[])
 {
-	static const char str1[] = "String1";
-	static const char str2[] = "string2";
-	int fdout = fileno(stdout);
+	static const char str1[] = "String1 String1";
+	static const char str2[] = "string2 string2 string2";
+	int fdout = STDOUT_FILENO;
 	bool use_decoder = false;
 	bool use_binary = true;
 	size_t niter = 100;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		case 'm':
 			if (strcmp(optarg, "binary") == 0) {
 				use_binary = true;
-			} else if (strcmp(optarg, "dprintf") == 0) {
+			} else if (strcmp(optarg, "fprintf") == 0) {
 				use_binary = false;
 			} else
 				goto usage;
@@ -79,15 +79,26 @@ int main(int argc, char *argv[])
 		if (use_decoder)
 			return flog_decode_all(STDIN_FILENO, fdout);
 
+		if (fdout != STDOUT_FILENO && flog_map_buf(fdout))
+			return 1;
 		for (i = 0; i < niter; i++)
-			flog_encode(STDOUT_FILENO, "Some message %s %s %c %li %d %lu\n",
+			if (flog_encode(fdout, "Some message %s %s %c %li %d %lu\n",
 				    str1, str2, 'c', (long)-4, (short)2,
-				    (unsigned long)2);
+				    (unsigned long)2))
+				return 1;
+		if (flog_close(fdout))
+			return 1;
 	} else {
-		for (i = 0; i < niter; i++)
-			dprintf(fdout, "Some message %s %s %c %li %d %lu\n",
+		FILE *f = fdopen(fdout, "w");
+
+		for (i = 0; i < niter; i++) {
+			fprintf(f, "Some message %s %s %c %li %d %lu\n",
 				str1, str2, 'c', (long)-4, (short)2,
 				(unsigned long)2);
+			fflush(f);
+		}
+		fclose(f);
+		return 0;
 	}
 
 	return 0;
