@@ -13,13 +13,20 @@ extern char _rodata_start, _rodata_end;
 char *rodata_start = &_rodata_start;
 char *rodata_end = &_rodata_end;
 
+enum {
+	MODE_BINARY,
+	MODE_FPRINTF,
+	MODE_SPRINTF,
+	MODE_DPRINTF,
+};
+
 int main(int argc, char *argv[])
 {
 	static const char str1[] = "String1 String1";
 	static const char str2[] = "string2 string2 string2";
 	int fdout = STDOUT_FILENO;
 	bool use_decoder = false;
-	bool use_binary = true;
+	int mode = MODE_BINARY;
 	size_t niter = 100;
 	int opt, idx;
 	size_t i;
@@ -43,9 +50,13 @@ int main(int argc, char *argv[])
 		switch (opt) {
 		case 'm':
 			if (strcmp(optarg, "binary") == 0) {
-				use_binary = true;
+				mode = MODE_BINARY;
 			} else if (strcmp(optarg, "fprintf") == 0) {
-				use_binary = false;
+				mode = MODE_FPRINTF;
+			} else if (strcmp(optarg, "sprintf") == 0) {
+				mode = MODE_SPRINTF;
+			} else if (strcmp(optarg, "dprintf") == 0) {
+				mode = MODE_DPRINTF;
 			} else
 				goto usage;
 			break;
@@ -75,7 +86,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (use_binary) {
+	switch (mode) {
+	case MODE_BINARY:
 		if (use_decoder)
 			return flog_decode_all(STDIN_FILENO, fdout);
 
@@ -88,7 +100,18 @@ int main(int argc, char *argv[])
 				return 1;
 		if (flog_close(fdout))
 			return 1;
-	} else {
+	break;
+	case MODE_DPRINTF:
+	{
+		for (i = 0; i < niter; i++) {
+			dprintf(fdout, "Some message %s %s %c %li %d %lu\n",
+				str1, str2, 'c', (long)-4, (short)2,
+				(unsigned long)2);
+		}
+		break;
+	}
+	case MODE_FPRINTF:
+	{
 		FILE *f = fdopen(fdout, "w");
 
 		for (i = 0; i < niter; i++) {
@@ -98,7 +121,21 @@ int main(int argc, char *argv[])
 			fflush(f);
 		}
 		fclose(f);
-		return 0;
+		break;
+	}
+	case MODE_SPRINTF:
+	{
+		static char buf[4096];
+
+		for (i = 0; i < niter; i++) {
+			sprintf(buf, "Some message %s %s %c %li %d %lu\n",
+				str1, str2, 'c', (long)-4, (short)2,
+				(unsigned long)2);
+		}
+		break;
+	}
+	default:
+		return 1;
 	}
 
 	return 0;
