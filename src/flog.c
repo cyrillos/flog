@@ -155,8 +155,8 @@ int flog_encode_msg(int fdout, unsigned int nargs, unsigned int mask, const char
 {
 	flog_msg_t *m;
 	va_list argptr;
-	char *str_start;
-	size_t i, n;
+	char *str_start, *p;
+	size_t i;
 
 	if (mbuf != _mbuf && flog_map_buf(fdout))
 		return -1;
@@ -167,14 +167,13 @@ int flog_encode_msg(int fdout, unsigned int nargs, unsigned int mask, const char
 	m->mask = mask;
 
 	str_start = (void *)m->args + sizeof(m->args[0]) * nargs;
-	n = strlen(format) + 1;
-	if (mbuf_size < (str_start + n + 1 - mbuf)) {
+	p = memccpy(str_start, format, 0, mbuf_size - (str_start - mbuf));
+	if (p == NULL) {
 		fprintf(stderr, "No memory for string argument\n");
 		return -1;
 	}
-	memcpy(str_start, format, n);
 	m->fmt = str_start - mbuf;
-	str_start += n;
+	str_start = p;
 
 	va_start(argptr, format);
 	for (i = 0; i < nargs; i++) {
@@ -185,16 +184,13 @@ int flog_encode_msg(int fdout, unsigned int nargs, unsigned int mask, const char
 		 * a copy (FIXME implement rodata refs).
 		 */
 		if (mask & (1u << i)) {
-			n = strlen((void *)m->args[i]);
-
-			if (mbuf_size > (str_start + n + 1 - mbuf)) {
-				memcpy(str_start, (void *)m->args[i], n + 1);
-				m->args[i] = str_start - mbuf;
-				str_start += n + 1;
-			} else {
+			p = memccpy(str_start, (void *)m->args[i], 0, mbuf_size - (str_start - mbuf));
+			if (p == NULL) {
 				fprintf(stderr, "No memory for string argument\n");
 				return -1;
 			}
+			m->args[i] = str_start - mbuf;
+			str_start = p;
 		}
 	}
 	va_end(argptr);
